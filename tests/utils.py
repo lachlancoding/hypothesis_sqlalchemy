@@ -5,23 +5,22 @@ from typing import (Hashable,
                     Tuple)
 from uuid import UUID
 
+from hypothesis.strategies import DataObject
 from sqlalchemy import (Column,
                         Table)
 from sqlalchemy.dialects import postgresql
 
-from hypothesis_sqlalchemy import constrained
-from hypothesis_sqlalchemy.hints import RecordType
-
-try:
-    from hypothesis.strategies import DataObject
-except ImportError:
-    from hypothesis._strategies import DataObject
+from hypothesis_sqlalchemy.core import table_constraints
+from hypothesis_sqlalchemy.hints import Record
 
 Bounds = Tuple[int, Optional[int]]
 DataObject = DataObject
 
+MAX_SIZE = 100
+MAX_MIN_SIZE = MAX_SIZE // 2
 
-def table_record_is_valid(table_record: RecordType,
+
+def table_record_is_valid(table_record: Record,
                           *,
                           table: Table) -> bool:
     return all(coordinate is None
@@ -37,7 +36,7 @@ def to_python_type(column: Column) -> type:
     return column_type.python_type
 
 
-def records_satisfy_table_constraints(records: List[RecordType],
+def records_satisfy_table_constraints(records: List[Record],
                                       *,
                                       table: Table) -> bool:
     def all_unique(iterable: Iterable[Hashable]) -> bool:
@@ -54,5 +53,5 @@ def records_satisfy_table_constraints(records: List[RecordType],
                                 for column in constraint.columns)
                           for record in records)
                for constraint in table.constraints
-               if isinstance(constraint, constrained.UNIQUE_TYPES)
+               if isinstance(constraint, table_constraints.UNIQUE_TYPES)
                and constraint.columns)
